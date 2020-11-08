@@ -8,9 +8,12 @@ namespace UserApi.Entities {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
+
+        [BsonElement("username")]
         public string Username { get; set; }
 
         [JsonIgnore]
+        [BsonElement("password")]
         public string Password { get; set; }
     }
 }
