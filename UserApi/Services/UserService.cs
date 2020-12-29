@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 using UserApi.Entities;
 using UserApi.Models;
 using UserApi.Repositories;
-using UserApi.Utilities;
+
+using TbspRpgLib.Settings;
 
 namespace UserApi.Services {
     public interface IUserService {

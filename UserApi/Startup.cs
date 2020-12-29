@@ -14,7 +14,6 @@ using Microsoft.Extensions.Options;
 
 using UserApi.Repositories;
 using UserApi.Services;
-using UserApi.Utilities;
 
 namespace UserApi
 {
@@ -31,12 +30,9 @@ namespace UserApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            TbspRpgLib.LibStartup.ConfigureTbspRpgServices(Configuration, services);
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IUserRepository, UserRepository>();
-
-            services.Configure<DatabaseSettings>(Configuration.GetSection("Database"));
-            services.AddSingleton<IDatabaseSettings>(sp =>
-                sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
