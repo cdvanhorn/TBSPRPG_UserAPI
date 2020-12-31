@@ -8,7 +8,8 @@ using UserApi.Entities;
 using UserApi.Models;
 using UserApi.Services;
 using UserApi.Repositories;
-using UserApi.Utilities;
+
+using TbspRpgLib.Settings;
 
 using Xunit;
 
