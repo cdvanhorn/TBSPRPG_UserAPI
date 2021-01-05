@@ -1,37 +1,39 @@
-using MongoDB.Driver;
-
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
+
+using Microsoft.EntityFrameworkCore;
 
 using UserApi.Entities;
 
-using TbspRpgLib.Repositories;
-using TbspRpgLib.Settings;
-
 namespace UserApi.Repositories {
     public interface IUserRepository {
-        Task<User> GetUserById(string id);
+        ValueTask<User> GetUserById(int id);
         Task<List<User>> GetAllUsers();
         Task<User> GetUserByUsernameAndPassword(string username, string password);
     }
 
-    public class UserRepository : MongoRepository, IUserRepository{
-        private readonly IMongoCollection<User> _users;
+    public class UserRepository : IUserRepository {
+        private UserContext _context;
 
-        public UserRepository(IDatabaseSettings databaseSettings) : base(databaseSettings){
-            _users = _mongoDatabase.GetCollection<User>("users");
+        public UserRepository(UserContext context) {
+            _context = context;
         }
 
-        public Task<User> GetUserById(string id) {
-            return _users.Find<User>(u => u.Id == id).FirstOrDefaultAsync();
+        public ValueTask<User> GetUserById(int id) {
+            return _context.Users.FindAsync(id);
         }
 
         public Task<User> GetUserByUsernameAndPassword(string username, string password) {
-            return _users.Find<User>(user => user.Username == username && user.Password == password).FirstOrDefaultAsync();
+            var users = from usr in _context.Users.AsQueryable()
+                        where usr.Username == username
+                        where usr.Password == password
+                        select usr;
+            return users.FirstOrDefaultAsync();
         }
 
         public Task<List<User>> GetAllUsers() {
-            return _users.Find(user => true).ToListAsync();
+            return _context.Users.AsQueryable().ToListAsync<User>();
         }
     }
 }

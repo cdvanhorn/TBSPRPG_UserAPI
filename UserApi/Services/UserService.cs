@@ -3,17 +3,18 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
-using UserApi.Entities;
 using UserApi.Models;
 using UserApi.Repositories;
+using UserApi.ViewModels;
 
 using TbspRpgLib.Settings;
 
 namespace UserApi.Services {
     public interface IUserService {
-        Task<User> GetById(string id);
-        Task<List<User>> GetAll();
+        ValueTask<UserViewModel> GetById(int id);
+        Task<List<UserViewModel>> GetAll();
         Task<AuthenticateResponse> Authenticate(AuthenticateRequest model);
     }
 
@@ -45,12 +46,16 @@ namespace UserApi.Services {
             return new AuthenticateResponse(user);
         }
 
-        public Task<User> GetById(string id) {
-            return _userRepository.GetUserById(id);
+        public async ValueTask<UserViewModel> GetById(int id) {
+            var user = await _userRepository.GetUserById(id);
+            if(user == null)
+                return null;
+            return new UserViewModel(user);
         }
 
-        public Task<List<User>> GetAll() {
-            return _userRepository.GetAllUsers();
+        public async Task<List<UserViewModel>> GetAll() {
+            var users = await _userRepository.GetAllUsers();
+            return users.Select(usr => new UserViewModel(usr)).ToList();
         }
     }
 }

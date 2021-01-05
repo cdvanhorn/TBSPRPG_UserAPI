@@ -9,7 +9,7 @@ namespace UserApi.Models
 
         public AuthenticateResponse(User user)
         {
-            Id = user.Id;
+            Id = user.Id.ToString();
             Username = user.Username;
         }
     }
