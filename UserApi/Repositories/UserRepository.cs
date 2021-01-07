@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using System;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -8,7 +9,7 @@ using UserApi.Entities;
 
 namespace UserApi.Repositories {
     public interface IUserRepository {
-        ValueTask<User> GetUserById(int id);
+        Task<User> GetUserById(Guid id);
         Task<List<User>> GetAllUsers();
         Task<User> GetUserByUsernameAndPassword(string username, string password);
     }
@@ -20,8 +21,8 @@ namespace UserApi.Repositories {
             _context = context;
         }
 
-        public ValueTask<User> GetUserById(int id) {
-            return _context.Users.FindAsync(id);
+        public Task<User> GetUserById(Guid id) {
+            return _context.Users.AsQueryable().Where(u => u.Id == id).FirstOrDefaultAsync();
         }
 
         public Task<User> GetUserByUsernameAndPassword(string username, string password) {

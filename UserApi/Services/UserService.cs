@@ -13,7 +13,7 @@ using TbspRpgLib.Settings;
 
 namespace UserApi.Services {
     public interface IUserService {
-        ValueTask<UserViewModel> GetById(int id);
+        Task<UserViewModel> GetById(string id);
         Task<List<UserViewModel>> GetAll();
         Task<AuthenticateResponse> Authenticate(AuthenticateRequest model);
     }
@@ -46,8 +46,11 @@ namespace UserApi.Services {
             return new AuthenticateResponse(user);
         }
 
-        public async ValueTask<UserViewModel> GetById(int id) {
-            var user = await _userRepository.GetUserById(id);
+        public async Task<UserViewModel> GetById(string id) {
+            Guid gid;
+            if(!Guid.TryParse(id, out gid))
+                return null;
+            var user = await _userRepository.GetUserById(gid);
             if(user == null)
                 return null;
             return new UserViewModel(user);

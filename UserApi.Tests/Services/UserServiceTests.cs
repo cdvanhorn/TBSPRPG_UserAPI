@@ -25,12 +25,12 @@ namespace UserApi.Tests.Services {
             //mock user repository
             var users = new List<User>();
             users.Add(new User() {
-                Id = 8675309,
+                Id = new Guid("35271bdf-250e-49ef-a89a-4bfc34408d2a"),
                 Username = "test",
                 Password = "g4XyaMMxqIwlm0gklTRldD3PrM/xYTDWmpvfyKc8Gi4=" //hashed version of "test"
             });
             users.Add(new User() {
-                Id = 8675310,
+                Id = new Guid("35271bdf-250e-49ef-a89a-4bfc34408d2b"),
                 Username = "testtwo",
                 Password = "g4XyaMMxqIwlm0gklTRldD3PrM/xYTDWmpvfyKc8Gi4=" //hashed version of "test"
             });
@@ -38,8 +38,8 @@ namespace UserApi.Tests.Services {
             murepo.Setup(repo => repo.GetUserByUsernameAndPassword(
                 It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(
                     (string u, string p) => users.Find(usr => usr.Username == u && usr.Password == p));
-            murepo.Setup(repo => repo.GetUserById(It.IsAny<int>()))
-                .ReturnsAsync((int id) => users.Find(usr => usr.Id == id));
+            murepo.Setup(repo => repo.GetUserById(It.IsAny<Guid>()))
+                .ReturnsAsync((Guid id) => users.Find(usr => usr.Id == id));
             murepo.Setup(repo => repo.GetAllUsers()).ReturnsAsync(users);
 
             _userService = new UserService(mdb.Object, murepo.Object);
@@ -59,7 +59,7 @@ namespace UserApi.Tests.Services {
             //assert
             Assert.NotNull(response);
             Assert.Equal("test", response.Username);
-            Assert.Equal("8675309", response.Id);
+            Assert.Equal("35271bdf-250e-49ef-a89a-4bfc34408d2a", response.Id.ToString());
         }
 
         [Fact]
@@ -95,20 +95,20 @@ namespace UserApi.Tests.Services {
         [Fact]
         public async void GetById_ValidId_ReturnUser() {
             //arrange
-            int id = 8675309;
+            string id = "35271bdf-250e-49ef-a89a-4bfc34408d2a";
 
             //act
             var user = await _userService.GetById(id);
 
             //assert
-            Assert.Equal("8675309", user.Id.ToString());
+            Assert.Equal("35271bdf-250e-49ef-a89a-4bfc34408d2a", user.Id.ToString());
             Assert.Equal("test", user.Username);
         }
 
         [Fact]
         public async void GetById_InvalidId_ReturnNull() {
             //arrange
-            int id = 8675308;
+            string id = "35271bdf-250e-49ef-a89a-4bfc34408d2c";
 
             //act
             var user = await _userService.GetById(id);
