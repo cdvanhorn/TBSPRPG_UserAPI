@@ -28,6 +28,7 @@ namespace UserApi.Controllers {
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             var users = await _userService.GetAll();
