@@ -54,6 +54,8 @@ namespace UserApi
 
             app.UseRouting();
 
+            TbspRpgLib.LibStartup.ConfigureTbspRpg(app);
+
             //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
