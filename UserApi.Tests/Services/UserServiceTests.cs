@@ -14,52 +14,68 @@ using TbspRpgLib.Settings;
 using Xunit;
 
 namespace UserApi.Tests.Services {
-    public class UserServiceTests {
-        private readonly UserService _userService;
-
-        public UserServiceTests() {
-            //need to mock database settings
-            var mdb = new Mock<IDatabaseSettings>();
-            mdb.Setup(db => db.Salt).Returns("y728sfLla98YUZpTgCM4VA==");
-
-            //mock user repository
-            var users = new List<User>();
-            users.Add(new User() {
-                Id = new Guid("35271bdf-250e-49ef-a89a-4bfc34408d2a"),
-                Username = "test",
-                Password = "g4XyaMMxqIwlm0gklTRldD3PrM/xYTDWmpvfyKc8Gi4=" //hashed version of "test"
-            });
-            users.Add(new User() {
-                Id = new Guid("35271bdf-250e-49ef-a89a-4bfc34408d2b"),
-                Username = "testtwo",
-                Password = "g4XyaMMxqIwlm0gklTRldD3PrM/xYTDWmpvfyKc8Gi4=" //hashed version of "test"
-            });
-            var murepo = new Mock<IUserRepository>();
-            murepo.Setup(repo => repo.GetUserByUsernameAndPassword(
-                It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(
-                    (string u, string p) => users.Find(usr => usr.Username == u && usr.Password == p));
-            murepo.Setup(repo => repo.GetUserById(It.IsAny<Guid>()))
-                .ReturnsAsync((Guid id) => users.Find(usr => usr.Id == id));
-            murepo.Setup(repo => repo.GetAllUsers()).ReturnsAsync(users);
-
-            _userService = new UserService(mdb.Object, murepo.Object);
+    public class UserServiceTests : InMemoryTest {
+        #region Setup
+        private Guid _userOneId;
+        public UserServiceTests() : base("UserServiceTests")
+        {
+            Seed();
         }
+
+        private void Seed()
+        {
+            using var context = new UserContext(_dbContextOptions);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
+            _userOneId = Guid.NewGuid();
+            var user = new User
+            {
+                Id = _userOneId,
+                Username = "test",
+                Password = "g4XyaMMxqIwlm0gklTRldD3PrM/xYTDWmpvfyKc8Gi4="
+            };
+
+            var userTwo = new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "testTwo",
+                Password = "g4XyaMMxqIwlm0gklTRldD3PrM/xYTDWmpvfyKc8Gi4="
+            };
+            
+            context.AddRange(user, userTwo);
+            context.SaveChanges();
+        }
+        #endregion
+        
+        private UserService CreateUserService(UserContext context)
+        {
+            var settings = new DatabaseSettings()
+            {
+                Salt = "y728sfLla98YUZpTgCM4VA=="
+            };
+            var repository = new UserRepository(context);
+            return new UserService(settings, repository);
+        }
+        
 
         [Fact]
         public async void Authenticate_IsValid_ReturnResponse() {
             //arrange
-            AuthenticateRequest req = new AuthenticateRequest() {
+            var req = new AuthenticateRequest() {
                 Username = "test",
                 Password = "test"
             };
+            await using var context = new UserContext(_dbContextOptions);
+            var userService = CreateUserService(context);
 
             //act
-            var response = await _userService.Authenticate(req);
+            var response = await userService.Authenticate(req);
 
             //assert
             Assert.NotNull(response);
             Assert.Equal("test", response.Username);
-            Assert.Equal("35271bdf-250e-49ef-a89a-4bfc34408d2a", response.Id.ToString());
+            Assert.Equal(_userOneId.ToString(), response.Id);
         }
 
         [Fact]
@@ -69,9 +85,11 @@ namespace UserApi.Tests.Services {
                 Username = "test",
                 Password = "testt"
             };
+            await using var context = new UserContext(_dbContextOptions);
+            var userService = CreateUserService(context);
 
             //act
-            var response = await _userService.Authenticate(req);
+            var response = await userService.Authenticate(req);
 
             //assert
             Assert.Null(response);
@@ -84,9 +102,11 @@ namespace UserApi.Tests.Services {
                 Username = "testt",
                 Password = "test"
             };
+            await using var context = new UserContext(_dbContextOptions);
+            var userService = CreateUserService(context);
 
             //act
-            var response = await _userService.Authenticate(req);
+            var response = await userService.Authenticate(req);
 
             //assert
             Assert.Null(response);
@@ -95,23 +115,25 @@ namespace UserApi.Tests.Services {
         [Fact]
         public async void GetById_ValidId_ReturnUser() {
             //arrange
-            string id = "35271bdf-250e-49ef-a89a-4bfc34408d2a";
+            await using var context = new UserContext(_dbContextOptions);
+            var userService = CreateUserService(context);
 
             //act
-            var user = await _userService.GetById(id);
+            var user = await userService.GetById(_userOneId.ToString());
 
             //assert
-            Assert.Equal("35271bdf-250e-49ef-a89a-4bfc34408d2a", user.Id.ToString());
+            Assert.Equal(_userOneId.ToString(), user.Id);
             Assert.Equal("test", user.Username);
         }
 
         [Fact]
         public async void GetById_InvalidId_ReturnNull() {
             //arrange
-            string id = "35271bdf-250e-49ef-a89a-4bfc34408d2c";
+            await using var context = new UserContext(_dbContextOptions);
+            var userService = CreateUserService(context);
 
             //act
-            var user = await _userService.GetById(id);
+            var user = await userService.GetById(Guid.NewGuid().ToString());
 
             //assert
             Assert.Null(user);
@@ -120,8 +142,11 @@ namespace UserApi.Tests.Services {
         [Fact]
         public async void GetAll_ReturnAll() {
             //arrange
+            await using var context = new UserContext(_dbContextOptions);
+            var userService = CreateUserService(context);
+            
             //act
-            var users = await _userService.GetAll();
+            var users = await userService.GetAll();
 
             //assert
             Assert.Equal(2, users.Count);
