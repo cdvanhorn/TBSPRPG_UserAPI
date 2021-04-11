@@ -58,7 +58,7 @@ namespace UserApi.Tests.Services {
             return new UserService(settings, repository);
         }
         
-
+        #region Authenticate
         [Fact]
         public async void Authenticate_IsValid_ReturnResponse() {
             //arrange
@@ -111,7 +111,9 @@ namespace UserApi.Tests.Services {
             //assert
             Assert.Null(response);
         }
+        #endregion
 
+        #region GetById
         [Fact]
         public async void GetById_ValidId_ReturnUser() {
             //arrange
@@ -138,7 +140,9 @@ namespace UserApi.Tests.Services {
             //assert
             Assert.Null(user);
         }
+        #endregion
 
+        #region GetAll
         [Fact]
         public async void GetAll_ReturnAll() {
             //arrange
@@ -151,5 +155,6 @@ namespace UserApi.Tests.Services {
             //assert
             Assert.Equal(2, users.Count);
         }
+        #endregion
     }
 }

@@ -10,7 +10,7 @@ namespace UserApi.Controllers {
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase {
-        private IUserService _userService;
+        private readonly IUserService _userService;
 
         public UsersController(IUserService userService) {
             _userService = userService;
@@ -27,8 +27,7 @@ namespace UserApi.Controllers {
             return Ok(response);
         }
 
-        [HttpGet]
-        [Authorize]
+        [HttpGet, Authorize]
         public async Task<IActionResult> GetAll()
         {
             var users = await _userService.GetAll();
